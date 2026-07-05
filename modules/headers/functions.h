@@ -46,4 +46,15 @@ void insertIntoTable(char *arquivoDados, char *arquivoIndex, int n);
 // FUNCIONALIDADE [9]
 void updateTable(char *arquivoDados, char *arquivoIndex, int n);
 
+// FUNCIONALIDADE [10]
+void createGraph(char *arquivoEntrada);
+
+// FUNCIONALIDADE [11]
+void getShortestPath(char *arquivoEntrada, char *nomeEstacaoOrigem, char *valorOrigem, char *nomeEstacaoDestino, char *valorDestino);
+
+// FUNCIONALIDADE [12]
+void improveSubwayNetwork(char *arquivoEntrada, char *nomeEstacaoOrigem, char *valorOrigem);
+
+// FUNCIONALIDADE [13]
+void countCyclesFromOrigin(char *arquivoEntrada, char *nomeEstacaoOrigem, char *valorOrigem);
 #endif
