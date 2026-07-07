@@ -104,4 +104,36 @@ typedef struct indexRecord{ // deve seguir essa ordem
 } IndexRecord;
 
 
+
+// --== @ ==-- 
+// PARTE 3 DO TRABALHO
+// --== @ ==-- 
+ 
+
+typedef struct aresta {
+    char *estacaoDestino;
+    int distancia;
+    int qtdLinhas;
+    char **nomeLinhas; // Array de strings (usado p/ lidar com o empate)
+    struct aresta *prox;
+} Aresta;
+
+typedef struct vertice {
+    char *nomeEstacao;
+    Aresta *inicio;
+} Vertice;
+
+typedef struct grafo {
+    int numVertices;
+    Vertice *vetorVertices;
+} Grafo;
+
+// FUNCIONALIDADE 12
+// Estrutura temp p/ guardar as arestar de forma nao direcionada
+typedef struct {
+    int u;
+    int v;
+    int peso;
+} ArestaND;
+
 #endif

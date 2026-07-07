@@ -4,27 +4,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "structs.h"
 
 // infinito usado no Dijkstra e Prim
 #define INF 2147483647 // tamanho max do int
 
-typedef struct aresta {
-    char *estacaoDestino;
-    int distancia;
-    int qtdLinhas;
-    char **nomeLinhas; // Array de strings (usado p/ lidar com o empate)
-    struct aresta *prox;
-} Aresta;
-
-typedef struct vertice {
-    char *nomeEstacao;
-    Aresta *inicio;
-} Vertice;
-
-typedef struct grafo {
-    int numVertices;
-    Vertice *vetorVertices;
-} Grafo;
 
 // funcoes base do Grafo
 Grafo *criarGrafo(int numVertices, char **nomesEstacoes);

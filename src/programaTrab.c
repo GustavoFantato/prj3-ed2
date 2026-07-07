@@ -82,6 +82,7 @@ int main() {
             updateTable(arquivoDados, arquivoIndex, n);
             break;
 
+        // --== PARTE 3 ==--
         case 10:
             // [10] - createAndListGraph: Cria Grafo e exibe a lista de adjacência
             scanf("%s", arquivoDados);
@@ -99,7 +100,7 @@ int main() {
             break;
         
         case 12:
-        
+            // [12] - Melhoria das linhas de metro da cidade
             {
                 char arquivoDados[100], arquivoIndex[100];
                 scanf("%s %s", arquivoDados, arquivoIndex);

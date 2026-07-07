@@ -1,5 +1,6 @@
 #include "grafo.h"
 #include "utils.h"
+#include "structs.h"
 
 // Func auxiliar para o qsort ordenar as linhas em caso de empate
 static int compareStrings(const void *a, const void *b) {
@@ -365,13 +366,6 @@ void dijkstra(Grafo *g, char *origem, char *destino) {
 
 
 // FUNCIONALIDADE 12
-
-// Estrutura temp p/ guardar as arestar de forma nao direcionada
-typedef struct {
-    int u;
-    int v;
-    int peso;
-} ArestaND;
 
 // Func recursiva auxiliar para imprimir a arvore geradora minima
 static void printAGM(Grafo *g, int u, int *ant, int *chave, int n) {
