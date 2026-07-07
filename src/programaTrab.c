@@ -87,10 +87,18 @@ int main() {
             scanf("%s", arquivoDados);
             createAndListGraph(arquivoDados);
             break;
+        
+        case 11:
+            // [11] - shortestPath: Dijkstra entre Origem e Destino
+            scanf("%s", arquivoDados);
+            shortestPath(arquivoDados);
+            break;
 
         default:
             // Funcionalidade inexistente
             break;
+
+        
     }
 
     return 0;

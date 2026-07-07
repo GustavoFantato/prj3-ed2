@@ -32,4 +32,5 @@ void inserirAresta(Grafo *g, char *origem, char *destino, int dist, char *linha)
 void imprimirGrafo(Grafo *g);
 void liberarGrafo(Grafo *g);
 
+void dijkstra(Grafo *g, char *origem, char *destino);
 #endif

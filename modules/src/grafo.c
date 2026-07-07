@@ -124,3 +124,104 @@ void liberarGrafo(Grafo *g) {
     free(g->vetorVertices);
     free(g);
 }
+
+#define INF 2147483647 // Representa o "Infinito" (INT_MAX)
+
+/* # Algoritmo de Dijkstra #
+-> Encontra o menor caminho e a menor distância entre duas estações.
+-> Resolve empates priorizando a ordem alfabética (menores índices do array).
+*/
+void dijkstra(Grafo *g, char *origem, char *destino) {
+    int idxOrigem = buscaVertice(g, origem);
+    int idxDestino = buscaVertice(g, destino);
+
+    if (idxOrigem == -1 || idxDestino == -1) {
+        printf("Falha na execução da funcionalidade.\n");
+        return;
+    }
+
+    int *dist = (int *)malloc(g->numVertices * sizeof(int));
+    int *prev = (int *)malloc(g->numVertices * sizeof(int));
+    int *visited = (int *)calloc(g->numVertices, sizeof(int));
+
+    // Inicialização
+    for (int i = 0; i < g->numVertices; i++) {
+        dist[i] = INF;
+        prev[i] = -1;
+    }
+    dist[idxOrigem] = 0;
+
+    // Loop principal para processar todos os vértices
+    for (int count = 0; count < g->numVertices; count++) {
+        int u = -1;
+        int min_dist = INF;
+
+        // Desempate 1 (Vértices): O array já é alfabético, então iterar de 0 a V-1
+        // com o comparador "<" estrito garante a escolha do menor nome!
+        for (int i = 0; i < g->numVertices; i++) {
+            if (!visited[i] && dist[i] < min_dist) {
+                min_dist = dist[i];
+                u = i;
+            }
+        }
+
+        // Se todos os restantes são inalcançáveis, podemos parar
+        if (u == -1 || min_dist == INF) break;
+        
+        visited[u] = 1;
+
+        // Relaxamento das arestas vizinhas
+        Aresta *atual = g->vetorVertices[u].inicio;
+        while (atual != NULL) {
+            int v = buscaVertice(g, atual->estacaoDestino);
+            if (v != -1 && !visited[v]) {
+                int peso = atual->distancia;
+                
+                // Se encontrou um caminho menor, atualiza
+                if (dist[u] + peso < dist[v]) {
+                    dist[v] = dist[u] + peso;
+                    prev[v] = u;
+                } 
+                // Desempate 2 (Arestas): Caminho de mesmo peso, prefere a origem de menor nome
+                else if (dist[u] + peso == dist[v]) {
+                    if (u < prev[v]) {
+                        prev[v] = u;
+                    }
+                }
+            }
+            atual = atual->prox;
+        }
+    }
+
+    // Verifica se alcançou o destino e formata a saída
+    if (dist[idxDestino] == INF) {
+        printf("Não existe caminho entre as estações solicitadas.\n");
+    } else {
+        // Reconstrói o caminho de trás para frente usando os prevs
+        int *caminho = (int *)malloc(g->numVertices * sizeof(int));
+        int tamCaminho = 0;
+        int curr = idxDestino;
+        while (curr != -1) {
+            caminho[tamCaminho++] = curr;
+            curr = prev[curr];
+        }
+
+        // Exibe conforme a formatação do PDF
+        printf("Numero de estacoes que serao percorridas: %d\n", tamCaminho - 1);
+        printf("Distancia que sera percorrida: %d\n", dist[idxDestino]);
+        
+        // Imprime as estações na ordem certa (de trás para frente do array)
+        for (int i = tamCaminho - 1; i >= 0; i--) {
+            printf("%s", g->vetorVertices[caminho[i]].nomeEstacao);
+            if (i > 0) printf(", ");
+        }
+        printf("\n");
+
+        free(caminho);
+    }
+
+    // Limpeza de RAM
+    free(dist);
+    free(prev);
+    free(visited);
+}
