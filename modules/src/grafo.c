@@ -299,14 +299,21 @@ void mstAndDFS(Grafo *g, char *origem) {
     Edge *edges = malloc(maxEdges * sizeof(Edge));
     int edgeCount = 0;
 
-    // 2. Extrai todas as arestas (apenas de ida, para evitar duplicações no grafo não-direcionado)
+    // 2. Extrai TODAS as arestas. O pulo do gato é normalizar u e v 
+    // para que 'u' seja sempre o menor alfabeticamente. O Kruskal vai 
+    // tratar arestas duplicadas (ida e volta) ignorando a segunda!
     for (int i = 0; i < g->numVertices; i++) {
         Aresta *atual = g->vetorVertices[i].inicio;
         while (atual != NULL) {
             int v = buscaVertice(g, atual->estacaoDestino);
-            if (i < v) { // Como i < v, 'u' é sempre alfabeticamente menor que 'v'
+            if (i < v) { 
                 edges[edgeCount].u = i;
                 edges[edgeCount].v = v;
+                edges[edgeCount].peso = atual->distancia;
+                edgeCount++;
+            } else if (i > v) { // <--- A MÁGICA ESTÁ AQUI (Garante ida e volta)
+                edges[edgeCount].u = v;
+                edges[edgeCount].v = i;
                 edges[edgeCount].peso = atual->distancia;
                 edgeCount++;
             }
@@ -338,7 +345,6 @@ void mstAndDFS(Grafo *g, char *origem) {
         if (x != y) {
             unionSet(parent, x, y);
             // Na MST, inserimos como não-direcionado (ida e volta)
-            // A função requer um nome de linha, enviamos "MST" genérico, pois não imprimiremos isso.
             inserirAresta(mst, mst->vetorVertices[u].nomeEstacao, mst->vetorVertices[v].nomeEstacao, edges[i].peso, "MST");
             inserirAresta(mst, mst->vetorVertices[v].nomeEstacao, mst->vetorVertices[u].nomeEstacao, edges[i].peso, "MST");
         }
