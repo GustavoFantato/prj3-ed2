@@ -261,16 +261,15 @@ static void unionSet(int *parent, int x, int y) {
     }
 }
 
-// Caminhamento em Profundidade (DFS) na Árvore Geradora Mínima
+// Caminhamento em Profundidade (DFS) restrito estritamente à árvore gerada
 static void dfs_recursivo(Grafo *mst, int u, int *visited) {
     visited[u] = 1;
     Aresta *atual = mst->vetorVertices[u].inicio;
     
-    // As arestas do nosso grafo já são guardadas em ordem alfabética!
     while (atual != NULL) {
         int v = buscaVertice(mst, atual->estacaoDestino);
-        if (!visited[v]) {
-            // Imprime exatamente como o run.codes quer: Origem, Destino, Distância
+        if (v != -1 && !visited[v]) {
+            // Imprime o arco percorrido na árvore
             printf("%s, %s, %d\n", mst->vetorVertices[u].nomeEstacao, atual->estacaoDestino, atual->distancia);
             dfs_recursivo(mst, v, visited);
         }
@@ -278,7 +277,7 @@ static void dfs_recursivo(Grafo *mst, int u, int *visited) {
     }
 }
 
-// Constrói a MST e dispara a DFS
+// Constrói a MST e dispara a DFS isolada por componente
 void mstAndDFS(Grafo *g, char *origem) {
     int idxOrigem = buscaVertice(g, origem);
     if (idxOrigem == -1) {
@@ -286,7 +285,6 @@ void mstAndDFS(Grafo *g, char *origem) {
         return;
     }
 
-    // 1. Conta o número máximo de arestas para alocar o array
     int maxEdges = 0;
     for (int i = 0; i < g->numVertices; i++) {
         Aresta *atual = g->vetorVertices[i].inicio;
@@ -299,9 +297,6 @@ void mstAndDFS(Grafo *g, char *origem) {
     Edge *edges = malloc(maxEdges * sizeof(Edge));
     int edgeCount = 0;
 
-    // 2. Extrai TODAS as arestas. O pulo do gato é normalizar u e v 
-    // para que 'u' seja sempre o menor alfabeticamente. O Kruskal vai 
-    // tratar arestas duplicadas (ida e volta) ignorando a segunda!
     for (int i = 0; i < g->numVertices; i++) {
         Aresta *atual = g->vetorVertices[i].inicio;
         while (atual != NULL) {
@@ -311,7 +306,7 @@ void mstAndDFS(Grafo *g, char *origem) {
                 edges[edgeCount].v = v;
                 edges[edgeCount].peso = atual->distancia;
                 edgeCount++;
-            } else if (i > v) { // <--- A MÁGICA ESTÁ AQUI (Garante ida e volta)
+            } else if (i > v) { 
                 edges[edgeCount].u = v;
                 edges[edgeCount].v = i;
                 edges[edgeCount].peso = atual->distancia;
@@ -321,10 +316,8 @@ void mstAndDFS(Grafo *g, char *origem) {
         }
     }
 
-    // 3. Ordena as arestas usando as regras de desempate do Kruskal
     qsort(edges, edgeCount, sizeof(Edge), cmpEdges);
 
-    // 4. Prepara o Union-Find e o Novo Grafo (que será a nossa Árvore MST)
     int *parent = malloc(g->numVertices * sizeof(int));
     char **nomes = malloc(g->numVertices * sizeof(char *));
     for (int i = 0; i < g->numVertices; i++) {
@@ -335,7 +328,6 @@ void mstAndDFS(Grafo *g, char *origem) {
     Grafo *mst = criarGrafo(g->numVertices, nomes);
     free(nomes);
 
-    // 5. Executa o Kruskal: Adiciona as arestas seguras na MST
     for (int i = 0; i < edgeCount; i++) {
         int u = edges[i].u;
         int v = edges[i].v;
@@ -344,17 +336,18 @@ void mstAndDFS(Grafo *g, char *origem) {
 
         if (x != y) {
             unionSet(parent, x, y);
-            // Na MST, inserimos como não-direcionado (ida e volta)
             inserirAresta(mst, mst->vetorVertices[u].nomeEstacao, mst->vetorVertices[v].nomeEstacao, edges[i].peso, "MST");
             inserirAresta(mst, mst->vetorVertices[v].nomeEstacao, mst->vetorVertices[u].nomeEstacao, edges[i].peso, "MST");
         }
     }
 
-    // 6. Roda a DFS partindo da estação origem
+    // Inicializa o vetor de visitados zerado
     int *visited = calloc(g->numVertices, sizeof(int));
+    
+    // Dispara a árvore recursiva a partir da origem
     dfs_recursivo(mst, idxOrigem, visited);
 
-    // 7. Limpeza da RAM
+    // Limpeza de RAM
     free(edges);
     free(parent);
     free(visited);
