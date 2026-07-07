@@ -80,14 +80,25 @@ void inserirAresta(Grafo *g, char *origem, char *destino, int dist, char *linha)
 }
 
 /* Exibe o Grafo exatamente como exigido no PDF */
+/* Exibe o Grafo exatamente como exigido no PDF */
 void imprimirGrafo(Grafo *g) {
     for (int i = 0; i < g->numVertices; i++) {
+        
+        // Pula as estações isoladas (que não têm nenhuma aresta saindo delas)
+        if (g->vetorVertices[i].inicio == NULL) continue;
+
+        // Imprime a estação de origem
         printf("%s", g->vetorVertices[i].nomeEstacao);
+        
         Aresta *atual = g->vetorVertices[i].inicio;
         while (atual != NULL) {
-            printf(" %s %d", atual->estacaoDestino, atual->distancia);
+            
+            // Imprime o destino e a distância separados por vírgula e espaço
+            printf(", %s, %d", atual->estacaoDestino, atual->distancia);
+            
+            // Imprime as linhas separadas por vírgula e espaço
             for (int j = 0; j < atual->qtdLinhas; j++) {
-                printf(" %s", atual->nomeLinhas[j]);
+                printf(", %s", atual->nomeLinhas[j]);
             }
             atual = atual->prox;
         }
