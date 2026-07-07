@@ -1,4 +1,5 @@
 #include "grafo.h"
+#include "utils.h"
 
 // Func auxiliar para o qsort ordenar as linhas em caso de empate
 static int compareStrings(const void *a, const void *b) {
@@ -29,6 +30,147 @@ Grafo* criarGrafo(int numVertices, char **nomesEstacoes) {
         g->vetorVertices[i].inicio = NULL;
     }
     return g;
+}
+
+// FABRICA DE GRAFO
+// Repete-se no inicio das 4 funcoes, modularizando-se entao para poupar codigo
+Grafo* construirGrafoDeArquivo(char *arquivoDados) {
+    
+    // Tenta abrir o arquivo binario no modo de leitura
+    FILE *binFile = fopen(arquivoDados, "rb");
+    if (binFile == NULL) {
+        printf("Falha na execução da funcionalidade.\n");
+        return NULL;
+    }
+
+    // Le o status no cabecalho para ver se o arquivo esta consistente
+    char status;
+    if (fread(&status, sizeof(char), 1, binFile) != 1 || status == '0') {
+        printf("Falha na execução da funcionalidade.\n");
+        fclose(binFile);
+        return NULL;
+    }
+    
+    // Pula o resto do cabecalho e vai direto p/ dados
+    fseek(binFile, DATA_HEADER_SIZE, SEEK_SET); 
+
+    DataRecord *regs = NULL; // Lista para guardar os registros que vamos ler
+    int qtdRegs = 0;         // Conta quantos registros validos achamos
+    char removido;
+
+    // Le o arquivo todo, registro por registro
+    while (fread(&removido, sizeof(char), 1, binFile) == 1) {
+        
+        // Se o registro foi apagado ('1'), pula os bytes dele e vai para o proximo
+        if (removido == '1') {
+            fseek(binFile, DATA_REGISTER_SIZE - 1, SEEK_CUR);
+            continue;
+        }
+
+        // Se nao foi apagado, lemos os dados de verdade
+        DataRecord data;
+        data.removido = removido;
+        lerRegistro(&data, binFile); 
+
+        // Pula o "lixo"
+        int garbageBytes = DATA_REGISTER_SIZE - (DATA_FIX_SIZE_FIELDS + data.tamNomeEstacao + data.tamNomeLinha);
+        fseek(binFile, garbageBytes, SEEK_CUR);
+
+        // Aumenta o tamanho da nossa lista e guarda o registro lido
+        qtdRegs++;
+        regs = realloc(regs, qtdRegs * sizeof(DataRecord));
+        regs[qtdRegs - 1] = data;
+    }
+    fclose(binFile); // Ja lemos tudo, pode fechar o arquivo
+
+    // Se nao achou nenhum registro valido, avisa e cancela
+    if (qtdRegs == 0) {
+        printf("Falha na execução da funcionalidade.\n");
+        if (regs != NULL) free(regs);
+        return NULL;
+    }
+
+    char **nomesUnicos = NULL; // Lista temporaria so para os nomes das estacoes
+    int qtdNomes = 0;
+
+    // Pega o nome de cada estacao que lemos e coloca nessa lista
+    for (int i = 0; i < qtdRegs; i++) {
+        if (regs[i].nomeEstacao == NULL) continue;
+        qtdNomes++;
+        nomesUnicos = realloc(nomesUnicos, qtdNomes * sizeof(char *));
+        nomesUnicos[qtdNomes - 1] = regs[i].nomeEstacao;
+    }
+    
+    // Coloca os nomes em ordem alfabetica
+    qsort(nomesUnicos, qtdNomes, sizeof(char *), cmpStr);
+
+    int nVertices = 0;
+    char **verticesFiltrados = malloc(qtdNomes * sizeof(char *));
+    
+    // Remove os nomes repetidos para descobrir as estacoes unicas (os vertices)
+    if (qtdNomes > 0) {
+        verticesFiltrados[0] = nomesUnicos[0]; // Guarda o primeiro
+        nVertices = 1;
+        for (int i = 1; i < qtdNomes; i++) {
+            // Se o nome atual for diferente do anterior, guarda tambem
+            if (strcmp(nomesUnicos[i], nomesUnicos[i-1]) != 0) {
+                verticesFiltrados[nVertices++] = nomesUnicos[i];
+            }
+        }
+    }
+    free(nomesUnicos); // Limpa a lista de nomes que tinha repeticoes
+
+    // Cria o grafo vazio, so com as estacoes unicas (ainda sem ligacoes)
+    Grafo *grafo = criarGrafo(nVertices, verticesFiltrados);
+    free(verticesFiltrados); // Limpa a lista de nomes unicos
+
+    // Passa por todos os registros de novo para fazer as ligacoes (arestas)
+    for (int i = 0; i < qtdRegs; i++) {
+        char *origem = regs[i].nomeEstacao;
+        if (origem == NULL) continue;
+
+        // 1. Cria a ligacao normal para a proxima estacao
+        if (regs[i].codProxEstacao != -1) {
+            char *destino = NULL;
+            // Procura o nome da proxima estacao usando o codigo dela
+            for (int j = 0; j < qtdRegs; j++) {
+                if (regs[j].codEstacao == regs[i].codProxEstacao) {
+                    destino = regs[j].nomeEstacao; 
+                    break; // Achou, pode parar de procurar
+                }
+            }
+            // Se achou o nome e tem uma linha valida, faz a ligacao no grafo
+            if (destino != NULL && regs[i].nomeLinha != NULL) {
+                inserirAresta(grafo, origem, destino, regs[i].distProxEstacao, regs[i].nomeLinha);
+            }
+        }
+
+        // 2. Cria a ligacao de integracao (quando muda para outra linha)
+        if (regs[i].codEstIntegra != -1) {
+            char *destinoIntegra = NULL;
+            // Procura o nome da estacao de integracao pelo codigo
+            for (int j = 0; j < qtdRegs; j++) {
+                if (regs[j].codEstacao == regs[i].codEstIntegra) {
+                    destinoIntegra = regs[j].nomeEstacao; 
+                    break;
+                }
+            }
+            // Se achou e o nome for diferente da origem, liga com distancia 0
+            if (destinoIntegra != NULL && strcmp(origem, destinoIntegra) != 0) {
+                inserirAresta(grafo, origem, destinoIntegra, 0, "Integração");
+            }
+        }
+    }
+
+    // Limpa todas as informacoes temporarias que usamos, para liberar memoria
+    for (int i = 0; i < qtdRegs; i++) {
+        if (regs[i].nomeEstacao != NULL) free(regs[i].nomeEstacao);
+        if (regs[i].nomeLinha != NULL) free(regs[i].nomeLinha);
+    }
+    free(regs);
+
+    // Devolve o grafo montado, limpo e pronto para ser usado nas funcoes 
+    return grafo; 
 }
 
 // Insere a aresta garantindo ordem alfabetica do destino e concatenando as linhas
@@ -244,7 +386,7 @@ static void printAGM(Grafo *g, int u, int *ant, int *chave, int n) {
     }
 }
 
-// Constroi a AGM
+// Constroi a arvore geradora minima
 void buildAGM(Grafo *g, char *origem) {
     int idxOrigem = buscaVertice(g, origem);
     if (idxOrigem == -1) {

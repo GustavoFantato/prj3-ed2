@@ -28,6 +28,8 @@ typedef struct grafo {
 
 // funcoes base do Grafo
 Grafo *criarGrafo(int numVertices, char **nomesEstacoes);
+Grafo* construirGrafoDeArquivo(char *arquivoDados);
+
 void inserirAresta(Grafo *g, char *origem, char *destino, int dist, char *linha);
 void imprimirGrafo(Grafo *g);
 void liberarGrafo(Grafo *g);
