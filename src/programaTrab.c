@@ -97,6 +97,15 @@ int main() {
                 shortestPath(arquivoDados, arquivoIndex);
             }
             break;
+        
+        case 12:
+            // [12] - minimumSpanningTree: Árvore Geradora Mínima (Kruskal) e DFS
+            {
+                char arquivoDados[100], arquivoIndex[100];
+                scanf("%s %s", arquivoDados, arquivoIndex);
+                minimumSpanningTree(arquivoDados, arquivoIndex);
+            }
+            break;
 
         default:
             // Funcionalidade inexistente

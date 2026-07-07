@@ -33,4 +33,6 @@ void imprimirGrafo(Grafo *g);
 void liberarGrafo(Grafo *g);
 
 void dijkstra(Grafo *g, char *origem, char *destino);
+
+void mstAndDFS(Grafo *g, char *origem);
 #endif

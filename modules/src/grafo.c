@@ -225,3 +225,132 @@ void dijkstra(Grafo *g, char *origem, char *destino) {
     free(prev);
     free(visited);
 }
+
+// ========================================================
+// FUNCIONALIDADE 12: Kruskal (MST) e Caminhamento DFS
+// ========================================================
+
+// Estrutura para ajudar na ordenação das arestas no Kruskal
+typedef struct {
+    int u;
+    int v;
+    int peso;
+} Edge;
+
+// Comparador para qsort do Kruskal (resolve os empates exigidos no PDF)
+// 1º Menor Peso | 2º Menor Vértice U (Origem) | 3º Menor Vértice V (Destino)
+static int cmpEdges(const void *a, const void *b) {
+    Edge *e1 = (Edge *)a;
+    Edge *e2 = (Edge *)b;
+    if (e1->peso != e2->peso) return e1->peso - e2->peso;
+    if (e1->u != e2->u) return e1->u - e2->u;
+    return e1->v - e2->v;
+}
+
+// Funções clássicas de Union-Find para o Kruskal
+static int findSet(int *parent, int i) {
+    if (parent[i] == i) return i;
+    return parent[i] = findSet(parent, parent[i]); 
+}
+
+static void unionSet(int *parent, int x, int y) {
+    int xroot = findSet(parent, x);
+    int yroot = findSet(parent, y);
+    if (xroot != yroot) {
+        parent[yroot] = xroot; // Liga as sub-árvores
+    }
+}
+
+// Caminhamento em Profundidade (DFS) na Árvore Geradora Mínima
+static void dfs_recursivo(Grafo *mst, int u, int *visited) {
+    visited[u] = 1;
+    Aresta *atual = mst->vetorVertices[u].inicio;
+    
+    // As arestas do nosso grafo já são guardadas em ordem alfabética!
+    while (atual != NULL) {
+        int v = buscaVertice(mst, atual->estacaoDestino);
+        if (!visited[v]) {
+            // Imprime exatamente como o run.codes quer: Origem, Destino, Distância
+            printf("%s, %s, %d\n", mst->vetorVertices[u].nomeEstacao, atual->estacaoDestino, atual->distancia);
+            dfs_recursivo(mst, v, visited);
+        }
+        atual = atual->prox;
+    }
+}
+
+// Constrói a MST e dispara a DFS
+void mstAndDFS(Grafo *g, char *origem) {
+    int idxOrigem = buscaVertice(g, origem);
+    if (idxOrigem == -1) {
+        printf("Falha na execução da funcionalidade.\n");
+        return;
+    }
+
+    // 1. Conta o número máximo de arestas para alocar o array
+    int maxEdges = 0;
+    for (int i = 0; i < g->numVertices; i++) {
+        Aresta *atual = g->vetorVertices[i].inicio;
+        while (atual != NULL) {
+            maxEdges++;
+            atual = atual->prox;
+        }
+    }
+
+    Edge *edges = malloc(maxEdges * sizeof(Edge));
+    int edgeCount = 0;
+
+    // 2. Extrai todas as arestas (apenas de ida, para evitar duplicações no grafo não-direcionado)
+    for (int i = 0; i < g->numVertices; i++) {
+        Aresta *atual = g->vetorVertices[i].inicio;
+        while (atual != NULL) {
+            int v = buscaVertice(g, atual->estacaoDestino);
+            if (i < v) { // Como i < v, 'u' é sempre alfabeticamente menor que 'v'
+                edges[edgeCount].u = i;
+                edges[edgeCount].v = v;
+                edges[edgeCount].peso = atual->distancia;
+                edgeCount++;
+            }
+            atual = atual->prox;
+        }
+    }
+
+    // 3. Ordena as arestas usando as regras de desempate do Kruskal
+    qsort(edges, edgeCount, sizeof(Edge), cmpEdges);
+
+    // 4. Prepara o Union-Find e o Novo Grafo (que será a nossa Árvore MST)
+    int *parent = malloc(g->numVertices * sizeof(int));
+    char **nomes = malloc(g->numVertices * sizeof(char *));
+    for (int i = 0; i < g->numVertices; i++) {
+        parent[i] = i;
+        nomes[i] = g->vetorVertices[i].nomeEstacao;
+    }
+    
+    Grafo *mst = criarGrafo(g->numVertices, nomes);
+    free(nomes);
+
+    // 5. Executa o Kruskal: Adiciona as arestas seguras na MST
+    for (int i = 0; i < edgeCount; i++) {
+        int u = edges[i].u;
+        int v = edges[i].v;
+        int x = findSet(parent, u);
+        int y = findSet(parent, v);
+
+        if (x != y) {
+            unionSet(parent, x, y);
+            // Na MST, inserimos como não-direcionado (ida e volta)
+            // A função requer um nome de linha, enviamos "MST" genérico, pois não imprimiremos isso.
+            inserirAresta(mst, mst->vetorVertices[u].nomeEstacao, mst->vetorVertices[v].nomeEstacao, edges[i].peso, "MST");
+            inserirAresta(mst, mst->vetorVertices[v].nomeEstacao, mst->vetorVertices[u].nomeEstacao, edges[i].peso, "MST");
+        }
+    }
+
+    // 6. Roda a DFS partindo da estação origem
+    int *visited = calloc(g->numVertices, sizeof(int));
+    dfs_recursivo(mst, idxOrigem, visited);
+
+    // 7. Limpeza da RAM
+    free(edges);
+    free(parent);
+    free(visited);
+    liberarGrafo(mst);
+}
