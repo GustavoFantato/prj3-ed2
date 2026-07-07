@@ -12,20 +12,20 @@ static int cmpStr(const void *a, const void *b) {
     return strcmp(*(const char **)a, *(const char **)b);
 }
 
-void shortestPath(char *arquivoDados) {
+void shortestPath(char *arquivoDados, char *arquivoIndex) {
     
-    // Leitura dos campos de busca do terminal
     char lixo1[50], lixo2[50];
     char valorOrigem[100], valorDestino[100];
 
-    // O comando é fixo: nomeEstacaoOrigem "X" nomeEstacaoDestino "Y"
-    scanf("%s", lixo1);
-    ScanQuoteString(valorOrigem);
-    scanf("%s", lixo2);
-    ScanQuoteString(valorDestino);
+    // O terminal envia: nomeEstacao "Clinicas" nomeEstacao "Paulista"
+    scanf("%s", lixo1); // Absorve o primeiro "nomeEstacao"
+    ScanQuoteString(valorOrigem); // Lê o "Clinicas"
+    
+    scanf("%s", lixo2); // Absorve o segundo "nomeEstacao"
+    ScanQuoteString(valorDestino); // Lê o "Paulista"
 
     // ===============================================
-    // LÓGICA DE MONTAGEM DO GRAFO (IDÊNTICA À FUNC 10)
+    // LÓGICA DE MONTAGEM DO GRAFO
     // ===============================================
     FILE *binFile = fopen(arquivoDados, "rb");
     if (binFile == NULL) {
@@ -127,10 +127,10 @@ void shortestPath(char *arquivoDados) {
     }
 
     // ===============================================
-    // EXECUÇÃO DA FUNCIONALIDADE 11
+    // EXECUÇÃO DO DIJKSTRA
     // ===============================================
     
-    // Chama a nossa nova função de Dijkstra isolada no módulo de grafos
+    // O Algoritmo matemático foi isolado no grafo.c
     dijkstra(grafo, valorOrigem, valorDestino);
 
     // Limpeza de RAM

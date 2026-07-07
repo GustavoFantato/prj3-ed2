@@ -89,9 +89,13 @@ int main() {
             break;
         
         case 11:
-            // [11] - shortestPath: Dijkstra entre Origem e Destino
-            scanf("%s", arquivoDados);
-            shortestPath(arquivoDados);
+            // [11] - Caminho mais curto (Dijkstra)
+            {
+                char arquivoDados[100], arquivoIndex[100];
+                // Lemos os DOIS ficheiros que o run.codes manda (mesmo ignorando o index)
+                scanf("%s %s", arquivoDados, arquivoIndex);
+                shortestPath(arquivoDados, arquivoIndex);
+            }
             break;
 
         default:

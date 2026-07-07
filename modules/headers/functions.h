@@ -50,7 +50,7 @@ void updateTable(char *arquivoDados, char *arquivoIndex, int n);
 void createAndListGraph(char *arquivoDados);
 
 // FUNCIONALIDADE [11]
-void shortestPath(char *arquivoDados);
+void shortestPath(char *arquivoDados, char *arquivoIndex);
 
 // FUNCIONALIDADE [12]
 void improveSubwayNetwork(char *arquivoEntrada, char *nomeEstacaoOrigem, char *valorOrigem);
