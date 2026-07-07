@@ -16,7 +16,9 @@ FLAGS = -g -Wall -Werror -I$(HEADERS_DIR)
 # Captura o programaTrab.c, o utils.c e TODOS os funcX.c dentro da subpasta de funções
 SOURCES = $(SRC_DIR)/programaTrab.c \
           $(MODULES_SRC)/utils.c \
-          $(wildcard $(MODULES_SRC)/functions/*.c)
+          $(wildcard $(MODULES_SRC)/functions/*.c) \
+		  $(MODULES_SRC)/grafo.c
+
 
 # 1. REGRA DE COMPILAÇÃO (Obrigatória: 'make all')
 all:
