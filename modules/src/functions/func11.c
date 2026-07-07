@@ -4,29 +4,22 @@
 
 /*
 # FUNCIONALIDADE [11] - Caminho Mais Curto (Dijkstra) #
--> Mapeia o binário para a memória no formato de Grafo (Listas de Adjacência).
--> Aplica o algoritmo de Dijkstra para encontrar o melhor percurso entre duas estações.
+-> Mapeia os dados p/ memoria no formato de Grafo
+-> Aplica o algoritmo de Dijkstra para encontrar o melhor percurso entre duas estacoes
 */
-
-static int cmpStr(const void *a, const void *b) {
-    return strcmp(*(const char **)a, *(const char **)b);
-}
 
 void shortestPath(char *arquivoDados, char *arquivoIndex) {
     
     char lixo1[50], lixo2[50];
     char valorOrigem[100], valorDestino[100];
 
-    // O terminal envia: nomeEstacao "Clinicas" nomeEstacao "Paulista"
-    scanf("%s", lixo1); // Absorve o primeiro "nomeEstacao"
-    ScanQuoteString(valorOrigem); // Lê o "Clinicas"
+    scanf("%s", lixo1); 
+    ScanQuoteString(valorOrigem);
     
-    scanf("%s", lixo2); // Absorve o segundo "nomeEstacao"
-    ScanQuoteString(valorDestino); // Lê o "Paulista"
+    scanf("%s", lixo2);
+    ScanQuoteString(valorDestino);
 
-    // ===============================================
-    // LÓGICA DE MONTAGEM DO GRAFO
-    // ===============================================
+    // montando o grafo
     FILE *binFile = fopen(arquivoDados, "rb");
     if (binFile == NULL) {
         printf("Falha na execução da funcionalidade.\n");
@@ -55,10 +48,10 @@ void shortestPath(char *arquivoDados, char *arquivoIndex) {
         data.removido = removido;
         lerRegistro(&data, binFile); 
 
-        int garbageBytes = DATA_REGISTER_SIZE - (DATA_FIX_SIZE_FIELDS + data.tamNomeEstacao + data.tamNomeLinha);
-        fseek(binFile, garbageBytes, SEEK_CUR);
+        int garbageBytes = DATA_REGISTER_SIZE - (DATA_FIX_SIZE_FIELDS + data.tamNomeEstacao + data.tamNomeLinha); // calcula o lixo
+        fseek(binFile, garbageBytes, SEEK_CUR); // posiciona ponteiro de acordo com lixo
 
-        qtdRegs++;
+        qtdRegs++; // incrementa
         regs = realloc(regs, qtdRegs * sizeof(DataRecord));
         regs[qtdRegs - 1] = data;
     }
@@ -126,14 +119,10 @@ void shortestPath(char *arquivoDados, char *arquivoIndex) {
         }
     }
 
-    // ===============================================
-    // EXECUÇÃO DO DIJKSTRA
-    // ===============================================
-    
-    // O Algoritmo matemático foi isolado no grafo.c
+    // Aplicacao do DIJKSTRA
     dijkstra(grafo, valorOrigem, valorDestino);
 
-    // Limpeza de RAM
+    // Liberacao da memoria
     liberarGrafo(grafo);
     for (int i = 0; i < qtdRegs; i++) {
         if (regs[i].nomeEstacao != NULL) free(regs[i].nomeEstacao);

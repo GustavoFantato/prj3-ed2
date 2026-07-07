@@ -4,15 +4,11 @@
 
 /*
 # FUNCIONALIDADE [10] - Mapeamento do Grafo #
--> Lê o arquivo binário ignorando os registros logicamente removidos.
--> Cria um Vértice para cada estação única, os ordenando alfabeticamente.
+-> Le o arquivo bin, ignorando os registros logicamente removidos
+-> Cria um vertice p/ cada estação unica, ordenando alfabeticamente
 -> Insere Arestas direcionadas para "ProxEstacao" e para "EstIntegra" (com peso 0).
--> Imprime as listas de adjacências formatadas.
+-> Imprime as listas de adjacências formatadas
 */
-
-static int cmpStr(const void *a, const void *b) {
-    return strcmp(*(const char **)a, *(const char **)b);
-}
 
 void createAndListGraph(char *arquivoDados) {
     FILE *binFile = fopen(arquivoDados, "rb");
@@ -29,7 +25,7 @@ void createAndListGraph(char *arquivoDados) {
     }
     fseek(binFile, DATA_HEADER_SIZE, SEEK_SET);
 
-    // 1. Carregar todos os registros válidos para a RAM
+    // Carregar todos os registros validos p/ memoria
     DataRecord *regs = NULL;
     int qtdRegs = 0;
     char removido;
@@ -42,24 +38,24 @@ void createAndListGraph(char *arquivoDados) {
 
         DataRecord data;
         data.removido = removido;
-        lerRegistro(&data, binFile); // Reaproveita a vossa função do utils.c
+        lerRegistro(&data, binFile); // Le os registros
 
-        int garbageBytes = DATA_REGISTER_SIZE - (DATA_FIX_SIZE_FIELDS + data.tamNomeEstacao + data.tamNomeLinha);
+        int garbageBytes = DATA_REGISTER_SIZE - (DATA_FIX_SIZE_FIELDS + data.tamNomeEstacao + data.tamNomeLinha); // calcula o lixo
         fseek(binFile, garbageBytes, SEEK_CUR);
 
-        qtdRegs++;
+        qtdRegs++; // soma 1 na qtd de registros
         regs = realloc(regs, qtdRegs * sizeof(DataRecord));
         regs[qtdRegs - 1] = data;
     }
     fclose(binFile);
 
-    if (qtdRegs == 0) {
+    if (qtdRegs == 0) { // se 0 registros, falhou a funcionalidade
         printf("Falha na execução da funcionalidade.\n");
         if (regs != NULL) free(regs);
         return;
     }
 
-    // 2. Extrair nomes únicos de estações para formar os Vértices O(N log N)
+    // pegar nomes unicos de estacoes para formar os Vertices
     char **nomesUnicos = NULL;
     int qtdNomes = 0;
 
@@ -69,9 +65,9 @@ void createAndListGraph(char *arquivoDados) {
         nomesUnicos = realloc(nomesUnicos, qtdNomes * sizeof(char *));
         nomesUnicos[qtdNomes - 1] = regs[i].nomeEstacao;
     }
-    qsort(nomesUnicos, qtdNomes, sizeof(char *), cmpStr);
+    qsort(nomesUnicos, qtdNomes, sizeof(char *), cmpStr); // ordena
 
-    // Remove duplicatas In-Place
+    // Remove duplicatas
     int nVertices = 0;
     char **verticesFiltrados = malloc(qtdNomes * sizeof(char *));
     if (qtdNomes > 0) {
@@ -85,16 +81,16 @@ void createAndListGraph(char *arquivoDados) {
     }
     free(nomesUnicos);
 
-    // 3. Inicializar o Grafo
+    // Inicializar o Grafo
     Grafo *grafo = criarGrafo(nVertices, verticesFiltrados);
     free(verticesFiltrados);
 
-    // 4. Inserir Arestas cruzando os dados da RAM
+    // Inserir arestas cruzando os dados da memoria
     for (int i = 0; i < qtdRegs; i++) {
         char *origem = regs[i].nomeEstacao;
         if (origem == NULL) continue;
 
-        // Ligação 1: Para a próxima estação
+        // Ligacao 1: Para a proxima estacao
         if (regs[i].codProxEstacao != -1) {
             char *destino = NULL;
             for (int j = 0; j < qtdRegs; j++) {
@@ -107,7 +103,7 @@ void createAndListGraph(char *arquivoDados) {
             }
         }
 
-        // Ligação 2: Para a estação de integração
+        // Ligacao 2: Para a estacao de integracao
         if (regs[i].codEstIntegra != -1) {
             char *destinoIntegra = NULL;
             for (int j = 0; j < qtdRegs; j++) {
@@ -116,17 +112,16 @@ void createAndListGraph(char *arquivoDados) {
                 }
             }
             if (destinoIntegra != NULL && strcmp(origem, destinoIntegra) != 0) {
-                // PDF exige exatamente a string "Integração" e distância 0
                 inserirAresta(grafo, origem, destinoIntegra, 0, "Integração");
             }
         }
     }
 
-    // 5. Imprimir e Limpar
+    // Printa e libera a mem
     imprimirGrafo(grafo);
     liberarGrafo(grafo);
 
-    // Limpa a RAM do array de registos (strings foram alocadas dinamicamente)
+    // Limpa a mem do array de registos, ja que foram alocados dinamicamente
     for (int i = 0; i < qtdRegs; i++) {
         if (regs[i].nomeEstacao != NULL) free(regs[i].nomeEstacao);
         if (regs[i].nomeLinha != NULL) free(regs[i].nomeLinha);

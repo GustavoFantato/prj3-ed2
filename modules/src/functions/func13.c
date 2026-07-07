@@ -4,25 +4,18 @@
 
 /*
 # FUNCIONALIDADE [13] - Busca de Ciclos Simples #
--> Mapeia o binário para a memória no formato de Grafo (Listas de Adjacência).
--> Aplica a busca em profundidade (DFS) para encontrar caminhos que voltem à origem.
+-> Mapeia o binario p/ mem no formato de Grafo
+-> Aplica a busca em profundidade p/ encontrar caminhos que voltem p/ origem
 */
-
-static int cmpStr(const void *a, const void *b) {
-    return strcmp(*(const char **)a, *(const char **)b);
-}
 
 void countCyclesFromOrigin(char *arquivoDados, char *arquivoIndex) {
     
     char lixo1[50];
     char valorOrigem[100];
 
-    scanf("%s", lixo1); // Absorve o "nomeEstacao" (vamos usá-lo apenas para limpar o buffer)
+    scanf("%s", lixo1);
     ScanQuoteString(valorOrigem); 
 
-    // ===============================================
-    // LÓGICA DE MONTAGEM DO GRAFO
-    // ===============================================
     FILE *binFile = fopen(arquivoDados, "rb");
     if (binFile == NULL) {
         printf("Falha na execução da funcionalidade.\n");
@@ -124,7 +117,7 @@ void countCyclesFromOrigin(char *arquivoDados, char *arquivoIndex) {
 
     buscarCiclos(grafo, valorOrigem);
 
-    // Limpeza rigorosa da memória
+    // Libera memoria
     liberarGrafo(grafo);
     for (int i = 0; i < qtdRegs; i++) {
         if (regs[i].nomeEstacao != NULL) free(regs[i].nomeEstacao);

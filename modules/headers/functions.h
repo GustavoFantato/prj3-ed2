@@ -53,7 +53,7 @@ void createAndListGraph(char *arquivoDados);
 void shortestPath(char *arquivoDados, char *arquivoIndex);
 
 // FUNCIONALIDADE [12]
-void minimumSpanningTree(char *arquivoDados, char *arquivoIndex);
+void improveSubwayLines(char *arquivoDados, char *arquivoIndex);
 
 // FUNCIONALIDADE [13]
 void countCyclesFromOrigin(char *arquivoDados, char *arquivoIndex);

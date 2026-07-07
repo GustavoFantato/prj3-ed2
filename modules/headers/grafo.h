@@ -5,38 +5,40 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Estrutura de uma Aresta (Lista encadeada para os destinos)
+// infinito usado no Dijkstra e Prim
+#define INF 2147483647 // tamanho max do int
+
 typedef struct aresta {
     char *estacaoDestino;
     int distancia;
     int qtdLinhas;
-    char **nomeLinhas; // Array de strings (para lidar com o empate de múltiplas linhas)
+    char **nomeLinhas; // Array de strings (usado p/ lidar com o empate)
     struct aresta *prox;
 } Aresta;
 
-// Estrutura de um Vértice (Array)
 typedef struct vertice {
     char *nomeEstacao;
     Aresta *inicio;
 } Vertice;
 
-// Estrutura principal do Grafo (Lista de Adjacências)
 typedef struct grafo {
     int numVertices;
     Vertice *vetorVertices;
 } Grafo;
 
-// Protótipos das funções do Grafo
-Grafo* criarGrafo(int numVertices, char **nomesEstacoes);
+// funcoes base do Grafo
+Grafo *criarGrafo(int numVertices, char **nomesEstacoes);
 void inserirAresta(Grafo *g, char *origem, char *destino, int dist, char *linha);
 void imprimirGrafo(Grafo *g);
 void liberarGrafo(Grafo *g);
 
+// Funcionalidade 11: Caminho Mais Curto
 void dijkstra(Grafo *g, char *origem, char *destino);
 
-void mstAndDFS(Grafo *g, char *origem);
+// Funcionalidade 12: Arvore Geradora Mínima (Prim)
+void buildAGM(Grafo *g, char *origem);
 
+// Funcionalidade 13: Busca de Ciclos Simples
 void buscarCiclos(Grafo *g, char *origem);
-
 
 #endif

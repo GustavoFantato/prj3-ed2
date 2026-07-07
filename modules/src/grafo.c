@@ -1,11 +1,11 @@
 #include "grafo.h"
 
-/* Função auxiliar para o qsort ordenar as linhas em caso de empate */
+// Func auxiliar para o qsort ordenar as linhas em caso de empate
 static int compareStrings(const void *a, const void *b) {
     return strcmp(*(const char **)a, *(const char **)b);
 }
 
-/* Busca Binária O(log N) para encontrar o índice do vértice no array */
+// Busca Binaria - O(log N) - p/ encontrar o indice do vertice no array
 static int buscaVertice(Grafo *g, char *nome) {
     int esq = 0, dir = g->numVertices - 1;
     while (esq <= dir) {
@@ -18,7 +18,7 @@ static int buscaVertice(Grafo *g, char *nome) {
     return -1; 
 }
 
-/* Inicializa o Grafo já com o tamanho exato de estações únicas ordenadas */
+// Inicializa o Grafo já com o tamanho exato de estacoes que sao unicas ordenadas
 Grafo* criarGrafo(int numVertices, char **nomesEstacoes) {
     Grafo *g = (Grafo *)malloc(sizeof(Grafo));
     g->numVertices = numVertices;
@@ -31,7 +31,7 @@ Grafo* criarGrafo(int numVertices, char **nomesEstacoes) {
     return g;
 }
 
-/* Insere a Aresta garantindo ordem alfabética do destino e concatenando as linhas */
+// Insere a aresta garantindo ordem alfabetica do destino e concatenando as linhas
 void inserirAresta(Grafo *g, char *origem, char *destino, int dist, char *linha) {
     int idx = buscaVertice(g, origem);
     if (idx == -1) return;
@@ -40,13 +40,13 @@ void inserirAresta(Grafo *g, char *origem, char *destino, int dist, char *linha)
     Aresta *atual = v->inicio;
     Aresta *ant = NULL;
 
-    // Procura a posição exata de inserção alfabética
+    // Procura a pos exata de insercao alfabetica
     while (atual != NULL && strcmp(atual->estacaoDestino, destino) < 0) {
         ant = atual;
         atual = atual->prox;
     }
 
-    // Caso a aresta para este destino já exista, basta adicionar a nova linha (se não existir)
+    // Caso a aresta p/ esse destino ja exista, eh so adicionar a nova linha (se n existir)
     if (atual != NULL && strcmp(atual->estacaoDestino, destino) == 0) {
         int linhaExiste = 0;
         for (int i = 0; i < atual->qtdLinhas; i++) {
@@ -55,7 +55,7 @@ void inserirAresta(Grafo *g, char *origem, char *destino, int dist, char *linha)
                 break;
             }
         }
-        // Se é uma linha nova entre as mesmas estações, adiciona e reordena
+        // Se eh uma linha nova entre as mesmas estacoes, adiciona e reordena
         if (!linhaExiste) {
             atual->qtdLinhas++;
             atual->nomeLinhas = realloc(atual->nomeLinhas, atual->qtdLinhas * sizeof(char *));
@@ -65,7 +65,7 @@ void inserirAresta(Grafo *g, char *origem, char *destino, int dist, char *linha)
         return;
     }
 
-    // Caso não exista, cria uma nova Aresta
+    // Caso nao exista, cria uma nova aresta
     Aresta *nova = (Aresta *)malloc(sizeof(Aresta));
     nova->estacaoDestino = strdup(destino);
     nova->distancia = dist;
@@ -74,29 +74,28 @@ void inserirAresta(Grafo *g, char *origem, char *destino, int dist, char *linha)
     nova->nomeLinhas[0] = strdup(linha);
     nova->prox = atual;
 
-    // Encadeia no local certo
+    // encadeia no local certo
     if (ant == NULL) v->inicio = nova;
     else ant->prox = nova;
 }
 
-/* Exibe o Grafo exatamente como exigido no PDF */
-/* Exibe o Grafo exatamente como exigido no PDF */
+// Printar o grafo de acordo com as especif. dos projeto
 void imprimirGrafo(Grafo *g) {
     for (int i = 0; i < g->numVertices; i++) {
         
-        // Pula as estações isoladas (que não têm nenhuma aresta saindo delas)
+        // Pula as estacoes isoladas (que nao tem nenhuma aresta saindo delas)
         if (g->vetorVertices[i].inicio == NULL) continue;
 
-        // Imprime a estação de origem
+        // Imprime a estacao de origem
         printf("%s", g->vetorVertices[i].nomeEstacao);
         
         Aresta *atual = g->vetorVertices[i].inicio;
         while (atual != NULL) {
             
-            // Imprime o destino e a distância separados por vírgula e espaço
+            // Imprime o destino e a dist separados por virgula e espaco
             printf(", %s, %d", atual->estacaoDestino, atual->distancia);
             
-            // Imprime as linhas separadas por vírgula e espaço
+            // Imprime as linhas separadas por virgula e espaco
             for (int j = 0; j < atual->qtdLinhas; j++) {
                 printf(", %s", atual->nomeLinhas[j]);
             }
@@ -106,7 +105,7 @@ void imprimirGrafo(Grafo *g) {
     }
 }
 
-/* Limpeza completa da RAM */
+/* Liberacao da memoria */
 void liberarGrafo(Grafo *g) {
     if (g == NULL) return;
     for (int i = 0; i < g->numVertices; i++) {
@@ -125,11 +124,9 @@ void liberarGrafo(Grafo *g) {
     free(g);
 }
 
-#define INF 2147483647 // Representa o "Infinito" (INT_MAX)
-
 /* # Algoritmo de Dijkstra #
--> Encontra o menor caminho e a menor distância entre duas estações.
--> Resolve empates priorizando a ordem alfabética (menores índices do array).
+-> Encontra o menor caminho e a menor dist entre duas estacoes.
+-> Resolve empates, priorizando a ordem alfabetica
 */
 void dijkstra(Grafo *g, char *origem, char *destino) {
     int idxOrigem = buscaVertice(g, origem);
@@ -144,20 +141,19 @@ void dijkstra(Grafo *g, char *origem, char *destino) {
     int *prev = (int *)malloc(g->numVertices * sizeof(int));
     int *visited = (int *)calloc(g->numVertices, sizeof(int));
 
-    // Inicialização
+    // inicializacao
     for (int i = 0; i < g->numVertices; i++) {
         dist[i] = INF;
         prev[i] = -1;
     }
     dist[idxOrigem] = 0;
 
-    // Loop principal para processar todos os vértices
+    // Loop principal para processar todos os vertices
     for (int count = 0; count < g->numVertices; count++) {
         int u = -1;
         int min_dist = INF;
 
-        // Desempate 1 (Vértices): O array já é alfabético, então iterar de 0 a V-1
-        // com o comparador "<" estrito garante a escolha do menor nome!
+        // Desempate 1 (vertices): O array ja eh alfabetico, então ir de 0 a V-1
         for (int i = 0; i < g->numVertices; i++) {
             if (!visited[i] && dist[i] < min_dist) {
                 min_dist = dist[i];
@@ -165,19 +161,18 @@ void dijkstra(Grafo *g, char *origem, char *destino) {
             }
         }
 
-        // Se todos os restantes são inalcançáveis, podemos parar
+        // se todos os restantes nao sao possiveis de chegar, para
         if (u == -1 || min_dist == INF) break;
         
         visited[u] = 1;
 
-        // Relaxamento das arestas vizinhas
         Aresta *atual = g->vetorVertices[u].inicio;
         while (atual != NULL) {
             int v = buscaVertice(g, atual->estacaoDestino);
             if (v != -1 && !visited[v]) {
                 int peso = atual->distancia;
                 
-                // Se encontrou um caminho menor, atualiza
+                // Se encontrou um caminho menor, att
                 if (dist[u] + peso < dist[v]) {
                     dist[v] = dist[u] + peso;
                     prev[v] = u;
@@ -193,11 +188,11 @@ void dijkstra(Grafo *g, char *origem, char *destino) {
         }
     }
 
-    // Verifica se alcançou o destino e formata a saída
+    // Verifica se chegou no destino e formata a saida
     if (dist[idxDestino] == INF) {
         printf("Não existe caminho entre as estações solicitadas.\n");
     } else {
-        // Reconstrói o caminho de trás para frente usando os prevs
+        // Reconstroi o caminho de tras p/ frente usando os prevs
         int *caminho = (int *)malloc(g->numVertices * sizeof(int));
         int tamCaminho = 0;
         int curr = idxDestino;
@@ -206,11 +201,11 @@ void dijkstra(Grafo *g, char *origem, char *destino) {
             curr = prev[curr];
         }
 
-        // Exibe conforme a formatação do PDF
+        // Print
         printf("Numero de estacoes que serao percorridas: %d\n", tamCaminho - 1);
         printf("Distancia que sera percorrida: %d\n", dist[idxDestino]);
         
-        // Imprime as estações na ordem certa (de trás para frente do array)
+        // Imprime as estacoes na ordem certa
         for (int i = tamCaminho - 1; i >= 0; i--) {
             printf("%s", g->vetorVertices[caminho[i]].nomeEstacao);
             if (i > 0) printf(", ");
@@ -220,156 +215,137 @@ void dijkstra(Grafo *g, char *origem, char *destino) {
         free(caminho);
     }
 
-    // Limpeza de RAM
+    // Liberacao de mem
     free(dist);
     free(prev);
     free(visited);
 }
 
-// ========================================================
-// FUNCIONALIDADE 12: Kruskal (MST) e Caminhamento DFS
-// ========================================================
 
-// Estrutura para ajudar na ordenação das arestas no Kruskal
+// FUNCIONALIDADE 12
+
+// Estrutura temp p/ guardar as arestar de forma nao direcionada
 typedef struct {
     int u;
     int v;
     int peso;
-} Edge;
+} ArestaND;
 
-// Comparador para qsort do Kruskal (resolve os empates exigidos no PDF)
-// 1º Menor Peso | 2º Menor Vértice U (Origem) | 3º Menor Vértice V (Destino)
-static int cmpEdges(const void *a, const void *b) {
-    Edge *e1 = (Edge *)a;
-    Edge *e2 = (Edge *)b;
-    if (e1->peso != e2->peso) return e1->peso - e2->peso;
-    if (e1->u != e2->u) return e1->u - e2->u;
-    return e1->v - e2->v;
-}
-
-// Funções clássicas de Union-Find para o Kruskal
-static int findSet(int *parent, int i) {
-    if (parent[i] == i) return i;
-    return parent[i] = findSet(parent, parent[i]); 
-}
-
-static void unionSet(int *parent, int x, int y) {
-    int xroot = findSet(parent, x);
-    int yroot = findSet(parent, y);
-    if (xroot != yroot) {
-        parent[yroot] = xroot; // Liga as sub-árvores
-    }
-}
-
-// Caminhamento em Profundidade (DFS) percorrendo estritamente as arestas da MST
-static void dfs_recursivo(Grafo *mst, int u, int *visited) {
-    visited[u] = 1; 
-    
-    Aresta *atual = mst->vetorVertices[u].inicio;
-    while (atual != NULL) {
-        int v = buscaVertice(mst, atual->estacaoDestino);
-        
-        if (v != -1 && !visited[v]) {
-            printf("%s, %s, %d\n", mst->vetorVertices[u].nomeEstacao, atual->estacaoDestino, atual->distancia);
-            dfs_recursivo(mst, v, visited);
+// Func recursiva auxiliar para imprimir a arvore geradora minima
+static void printAGM(Grafo *g, int u, int *ant, int *chave, int n) {
+    for (int v = 0; v < n; v++) {
+        // Se u for o pai direto de v na arvore gerada
+        if (ant[v] == u) {
+            printf("%s, %s, %d\n", g->vetorVertices[u].nomeEstacao, g->vetorVertices[v].nomeEstacao, chave[v]);
+            
+            // chamada recursiva pros descentendentes de v
+            printAGM(g, v, ant, chave, n);
         }
-        atual = atual->prox;
     }
 }
 
-// Constrói a MST via Kruskal e dispara o caminhamento DFS
-void mstAndDFS(Grafo *g, char *origem) {
+// Constroi a AGM
+void buildAGM(Grafo *g, char *origem) {
     int idxOrigem = buscaVertice(g, origem);
     if (idxOrigem == -1) {
         printf("Falha na execução da funcionalidade.\n");
         return;
     }
 
-    int maxEdges = 0;
-    for (int i = 0; i < g->numVertices; i++) {
+    int n = g->numVertices;
+    int max_arestas = 0;
+    
+    // Conta o total de arestas para alocacao da struct aux criada
+    for(int i = 0; i < n; i++) {
         Aresta *atual = g->vetorVertices[i].inicio;
-        while (atual != NULL) {
-            maxEdges++;
-            atual = atual->prox;
+        while(atual) { 
+            max_arestas++; 
+            atual = atual->prox; 
         }
     }
 
-    Edge *edges = malloc(maxEdges * sizeof(Edge));
-    int edgeCount = 0;
-
-    // CONSOLIDAÇÃO BIDIRECIONAL: Garante apenas 1 aresta por par de estações com o menor peso
-    for (int i = 0; i < g->numVertices; i++) {
+    ArestaND *arestas = malloc(max_arestas * sizeof(ArestaND));
+    int m = 0;
+    
+    // Coletar as arestas
+    for (int i = 0; i < n; i++) {
         Aresta *atual = g->vetorVertices[i].inicio;
         while (atual != NULL) {
             int v = buscaVertice(g, atual->estacaoDestino);
-            if (v != -1) {
-                // Força u ser o menor e v o maior (Ordem Alfabética)
-                int u_node = (i < v) ? i : v;
-                int v_node = (i > v) ? i : v;
-
-                int found = 0;
-                for (int k = 0; k < edgeCount; k++) {
-                    if (edges[k].u == u_node && edges[k].v == v_node) {
-                        // Se já achou a mesma conexão, mantém apenas a de MENOR distância
-                        if (atual->distancia < edges[k].peso) {
-                            edges[k].peso = atual->distancia;
-                        }
-                        found = 1;
-                        break;
-                    }
-                }
-                
-                // Só adiciona se for uma conexão nova
-                if (!found) {
-                    edges[edgeCount].u = u_node;
-                    edges[edgeCount].v = v_node;
-                    edges[edgeCount].peso = atual->distancia;
-                    edgeCount++;
-                }
+            // ignora arestas em que o destino nao tem possui saidas
+            if (v != -1 && g->vetorVertices[v].inicio != NULL) {
+                arestas[m].u = i;
+                arestas[m].v = v;
+                arestas[m].peso = atual->distancia;
+                m++;
             }
             atual = atual->prox;
         }
     }
 
-    qsort(edges, edgeCount, sizeof(Edge), cmpEdges);
+    int *chave = malloc(n * sizeof(int));
+    int *ant = malloc(n * sizeof(int));
+    int *visitado = calloc(n, sizeof(int));
 
-    int *parent = malloc(g->numVertices * sizeof(int));
-    char **nomes = malloc(g->numVertices * sizeof(char *));
-    for (int i = 0; i < g->numVertices; i++) {
-        parent[i] = i;
-        nomes[i] = g->vetorVertices[i].nomeEstacao;
+    for (int i = 0; i < n; i++){
+        chave[i] = INF;
+        ant[i] = -1;
     }
-    
-    Grafo *mst = criarGrafo(g->numVertices, nomes);
-    free(nomes);
 
-    for (int i = 0; i < edgeCount; i++) {
-        int u = edges[i].u;
-        int v = edges[i].v;
-        int x = findSet(parent, u);
-        int y = findSet(parent, v);
+    chave[idxOrigem] = 0;
+    visitado[idxOrigem] = 1;
+    int count = 1;
 
-        if (x != y) {
-            unionSet(parent, x, y);
-            inserirAresta(mst, mst->vetorVertices[u].nomeEstacao, mst->vetorVertices[v].nomeEstacao, edges[i].peso, "MST");
-            inserirAresta(mst, mst->vetorVertices[v].nomeEstacao, mst->vetorVertices[u].nomeEstacao, edges[i].peso, "MST");
+    // Algoritmo de Prim na lista de arestas
+    while (count < n) {
+        int melhorU = -1, melhorV = -1;
+        int menorPeso = INF;
+
+        // Percorre a lista procurando a melhor aresta de fronteira
+        for (int i = 0; i < m; i++) {
+            int u = arestas[i].u;
+            int v = arestas[i].v;
+            int peso = arestas[i].peso;
+
+            // Aresta deve ter exatamente um extremo dentro da arvore (visitado) e outro fora
+            if (visitado[u] == visitado[v]) continue;
+
+            int interno = visitado[u] ? u : v;
+            int externo = visitado[u] ? v : u;
+
+            // Criterios de desempate
+            // menor peso -> menor ID do vertice interno -> menor ID do vertice externo
+            if (peso < menorPeso ||
+               (peso == menorPeso && interno < melhorU) ||
+               (peso == menorPeso && interno == melhorU && externo < melhorV)) {
+                menorPeso = peso;
+                melhorU = interno;
+                melhorV = externo;
+            }
         }
+
+        // Se nao encontrou vizinho valido, o componente conexo esgotou
+        if (melhorV == -1) break;
+
+        visitado[melhorV] = 1;
+        chave[melhorV] = menorPeso;
+        ant[melhorV] = melhorU;
+        count++;
     }
 
-    int *visited = calloc(g->numVertices, sizeof(int));
-    dfs_recursivo(mst, idxOrigem, visited);
+    // printa com a func auxiliar
+    printAGM(g, idxOrigem, ant, chave, n);
 
-    free(edges);
-    free(parent);
-    free(visited);
-    liberarGrafo(mst);
+    free(arestas);
+    free(chave); 
+    free(ant); 
+    free(visitado);
 }
 
-// ========================================================
 // FUNCIONALIDADE 13: Busca de Ciclos Simples
-// ========================================================
 
-static void dfs_cycles(Grafo *g, int origin, int u, int *visited, int *count) {
+// busca em profundidade
+static void buscaProfundidadeCiclos(Grafo *g, int origin, int u, int *visited, int *count) {
     Aresta *atual = g->vetorVertices[u].inicio;
     
     while (atual != NULL) {
@@ -377,11 +353,11 @@ static void dfs_cycles(Grafo *g, int origin, int u, int *visited, int *count) {
         
         if (v != -1) {
             if (v == origin) {
-                (*count)++; // Encontrou um ciclo de volta para a origem!
+                (*count)++; // encontrou um ciclo de volta p/ origem
             } else if (!visited[v]) {
                 visited[v] = 1;
-                dfs_cycles(g, origin, v, visited, count);
-                visited[v] = 0; // Backtracking para encontrar todos os ciclos
+                buscaProfundidadeCiclos(g, origin, v, visited, count);
+                visited[v] = 0; // backtracking para encontrar todos os ciclos
             }
         }
         atual = atual->prox;
@@ -399,7 +375,7 @@ void buscarCiclos(Grafo *g, char *origem) {
     int count = 0;
 
     visited[idxOrigem] = 1;
-    dfs_cycles(g, idxOrigem, idxOrigem, visited, &count);
+    buscaProfundidadeCiclos(g, idxOrigem, idxOrigem, visited, &count);
 
     if (count == 0) {
         printf("Quantidade de ciclos: -1\n");

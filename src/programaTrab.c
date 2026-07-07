@@ -103,7 +103,7 @@ int main() {
             {
                 char arquivoDados[100], arquivoIndex[100];
                 scanf("%s %s", arquivoDados, arquivoIndex);
-                minimumSpanningTree(arquivoDados, arquivoIndex);
+                improveSubwayLines(arquivoDados, arquivoIndex);
             }
             break;
         case 13:

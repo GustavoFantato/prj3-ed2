@@ -55,6 +55,10 @@ void lerRegistro(DataRecord *data, FILE *binFile){
 
 }
 
+int cmpStr(const void *a, const void *b) {
+    return strcmp(*(const char **)a, *(const char **)b);
+}
+
 
 // FUNCOES UTILIZADAS NA FUNCIONALIDADE [1]
 // Ao fim da funcionalidade, printa a soma dos bytes do arquivo binario

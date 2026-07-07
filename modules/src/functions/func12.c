@@ -3,28 +3,18 @@
 #include "grafo.h"
 
 /*
-# FUNCIONALIDADE [12] - Árvore Geradora Mínima (Kruskal) e Caminhamento em DFS #
--> Mapeia o binário para a memória no formato de Grafo (Listas de Adjacência).
--> Aplica o algoritmo de Kruskal para criar a MST baseada nas distâncias.
--> Realiza um caminhamento DFS recursivo para imprimir os passos partindo da origem.
+# FUNCIONALIDADE [12] - Melhoria nas linhas de metro #
+-> Gastar menor quantia possivel pra reprojetar as linhas de metro, garantindo que as pessoas possam sair de qualquer estacao e chegar em qualquer outra estacao
 */
 
-static int cmpStr(const void *a, const void *b) {
-    return strcmp(*(const char **)a, *(const char **)b);
-}
-
-void minimumSpanningTree(char *arquivoDados, char *arquivoIndex) {
+void improveSubwayLines(char *arquivoDados, char *arquivoIndex) {
     
     char lixo1[50];
     char valorOrigem[100];
 
-    // O terminal envia: nomeEstacao "Mogi das Cruzes"
-    scanf("%s", lixo1); // Absorve o "nomeEstacao" (vamos usá-lo apenas para limpar o buffer)
-    ScanQuoteString(valorOrigem); // Extrai apenas a estação "Mogi das Cruzes"
+    scanf("%s", lixo1); 
+    ScanQuoteString(valorOrigem); 
 
-    // ===============================================
-    // LÓGICA DE MONTAGEM DO GRAFO 
-    // ===============================================
     FILE *binFile = fopen(arquivoDados, "rb");
     if (binFile == NULL) {
         printf("Falha na execução da funcionalidade.\n");
@@ -95,6 +85,7 @@ void minimumSpanningTree(char *arquivoDados, char *arquivoIndex) {
     Grafo *grafo = criarGrafo(nVertices, verticesFiltrados);
     free(verticesFiltrados);
 
+    // Mapeamento 
     for (int i = 0; i < qtdRegs; i++) {
         char *origem = regs[i].nomeEstacao;
         if (origem == NULL) continue;
@@ -123,11 +114,9 @@ void minimumSpanningTree(char *arquivoDados, char *arquivoIndex) {
             }
         }
     }
-    
-    // A lógica matemática densa foi isolada no nosso módulo.
-    mstAndDFS(grafo, valorOrigem);
 
-    // Limpeza rigorosa da memória RAM
+    buildAGM(grafo, valorOrigem);
+
     liberarGrafo(grafo);
     for (int i = 0; i < qtdRegs; i++) {
         if (regs[i].nomeEstacao != NULL) free(regs[i].nomeEstacao);

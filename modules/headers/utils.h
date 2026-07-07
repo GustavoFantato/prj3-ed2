@@ -12,7 +12,7 @@
 // Funcoes gerais
 void printRegistro(DataRecord data);
 void lerRegistro(DataRecord *data, FILE *binFile);
-
+int cmpStr(const void *a, const void *b);
 
 // Utilizadas na funcionalidade [1]
 void binarioNaTela(char *arquivo);
