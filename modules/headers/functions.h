@@ -47,7 +47,7 @@ void insertIntoTable(char *arquivoDados, char *arquivoIndex, int n);
 void updateTable(char *arquivoDados, char *arquivoIndex, int n);
 
 // FUNCIONALIDADE [10]
-void createGraph(char *arquivoEntrada);
+void createAndListGraph(char *arquivoDados);
 
 // FUNCIONALIDADE [11]
 void getShortestPath(char *arquivoEntrada, char *nomeEstacaoOrigem, char *valorOrigem, char *nomeEstacaoDestino, char *valorDestino);

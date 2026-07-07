@@ -82,6 +82,12 @@ int main() {
             updateTable(arquivoDados, arquivoIndex, n);
             break;
 
+        case 10:
+            // [10] - createAndListGraph: Cria Grafo e exibe a lista de adjacência
+            scanf("%s", arquivoDados);
+            createAndListGraph(arquivoDados);
+            break;
+
         default:
             // Funcionalidade inexistente
             break;
