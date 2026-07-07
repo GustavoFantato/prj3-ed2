@@ -261,23 +261,31 @@ static void unionSet(int *parent, int x, int y) {
     }
 }
 
-// Caminhamento em Profundidade (DFS) restrito estritamente à árvore gerada
+// Caminhamento em Profundidade (DFS) percorrendo estritamente as arestas da MST
 static void dfs_recursivo(Grafo *mst, int u, int *visited) {
-    visited[u] = 1;
+    visited[u] = 1; // Marca o vértice atual como visitado
+    
     Aresta *atual = mst->vetorVertices[u].inicio;
     
+    // Como as arestas no nosso 'mst' já são inseridas ordenadas alfabeticamente,
+    // o 'while' vai seguir a ordem correta exigida para os filhos
     while (atual != NULL) {
         int v = buscaVertice(mst, atual->estacaoDestino);
+        
+        // CORREÇÃO CRÍTICA: Só entra e imprime se o destino 'v' ainda não foi visitado
+        // na árvore de caminhamento a partir da raiz daquele componente!
         if (v != -1 && !visited[v]) {
-            // Imprime o arco percorrido na árvore
+            // Imprime exatamente o arco pai -> filho da árvore geradora
             printf("%s, %s, %d\n", mst->vetorVertices[u].nomeEstacao, atual->estacaoDestino, atual->distancia);
+            
+            // Entra recursivamente no filho
             dfs_recursivo(mst, v, visited);
         }
         atual = atual->prox;
     }
 }
 
-// Constrói a MST e dispara a DFS isolada por componente
+// Constrói a MST via Kruskal e dispara o caminhamento DFS correto
 void mstAndDFS(Grafo *g, char *origem) {
     int idxOrigem = buscaVertice(g, origem);
     if (idxOrigem == -1) {
@@ -285,6 +293,7 @@ void mstAndDFS(Grafo *g, char *origem) {
         return;
     }
 
+    // 1. Conta o número máximo de arestas para alocação do array
     int maxEdges = 0;
     for (int i = 0; i < g->numVertices; i++) {
         Aresta *atual = g->vetorVertices[i].inicio;
@@ -297,6 +306,7 @@ void mstAndDFS(Grafo *g, char *origem) {
     Edge *edges = malloc(maxEdges * sizeof(Edge));
     int edgeCount = 0;
 
+    // 2. Extrai as arestas do grafo direcionado original transformando em não-direcionado
     for (int i = 0; i < g->numVertices; i++) {
         Aresta *atual = g->vetorVertices[i].inicio;
         while (atual != NULL) {
@@ -316,8 +326,10 @@ void mstAndDFS(Grafo *g, char *origem) {
         }
     }
 
+    // 3. Ordena as arestas com base nas regras estritas de desempate do Kruskal
     qsort(edges, edgeCount, sizeof(Edge), cmpEdges);
 
+    // 4. Prepara o Union-Find e inicializa a estrutura da árvore (mst)
     int *parent = malloc(g->numVertices * sizeof(int));
     char **nomes = malloc(g->numVertices * sizeof(char *));
     for (int i = 0; i < g->numVertices; i++) {
@@ -328,26 +340,29 @@ void mstAndDFS(Grafo *g, char *origem) {
     Grafo *mst = criarGrafo(g->numVertices, nomes);
     free(nomes);
 
+    // 5. Algoritmo de Kruskal: Constrói a árvore de custo mínimo
     for (int i = 0; i < edgeCount; i++) {
         int u = edges[i].u;
         int v = edges[i].v;
         int x = findSet(parent, u);
         int y = findSet(parent, v);
 
+        // Se não forma ciclo, a aresta pertence à MST
         if (x != y) {
             unionSet(parent, x, y);
+            // Insere como via de mão dupla (não-direcionado) na nossa estrutura de árvore
             inserirAresta(mst, mst->vetorVertices[u].nomeEstacao, mst->vetorVertices[v].nomeEstacao, edges[i].peso, "MST");
             inserirAresta(mst, mst->vetorVertices[v].nomeEstacao, mst->vetorVertices[u].nomeEstacao, edges[i].peso, "MST");
         }
     }
 
-    // Inicializa o vetor de visitados zerado
+    // 6. Vetor de controle de visitados para o caminhamento da DFS
     int *visited = calloc(g->numVertices, sizeof(int));
     
-    // Dispara a árvore recursiva a partir da origem
+    // Dispara a árvore de recursão a partir do vértice de origem informado
     dfs_recursivo(mst, idxOrigem, visited);
 
-    // Limpeza de RAM
+    // 7. Limpeza rigorosa da memória RAM
     free(edges);
     free(parent);
     free(visited);
