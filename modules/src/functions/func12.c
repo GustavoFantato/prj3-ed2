@@ -23,7 +23,7 @@ void minimumSpanningTree(char *arquivoDados, char *arquivoIndex) {
     ScanQuoteString(valorOrigem); // Extrai apenas a estação "Mogi das Cruzes"
 
     // ===============================================
-    // LÓGICA DE MONTAGEM DO GRAFO (IDÊNTICA À FUNC 11)
+    // LÓGICA DE MONTAGEM DO GRAFO 
     // ===============================================
     FILE *binFile = fopen(arquivoDados, "rb");
     if (binFile == NULL) {
@@ -123,10 +123,6 @@ void minimumSpanningTree(char *arquivoDados, char *arquivoIndex) {
             }
         }
     }
-
-    // ===============================================
-    // EXECUÇÃO DO KRUSKAL (MST) E DFS
-    // ===============================================
     
     // A lógica matemática densa foi isolada no nosso módulo.
     mstAndDFS(grafo, valorOrigem);

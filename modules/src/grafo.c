@@ -263,29 +263,21 @@ static void unionSet(int *parent, int x, int y) {
 
 // Caminhamento em Profundidade (DFS) percorrendo estritamente as arestas da MST
 static void dfs_recursivo(Grafo *mst, int u, int *visited) {
-    visited[u] = 1; // Marca o vértice atual como visitado
+    visited[u] = 1; 
     
     Aresta *atual = mst->vetorVertices[u].inicio;
-    
-    // Como as arestas no nosso 'mst' já são inseridas ordenadas alfabeticamente,
-    // o 'while' vai seguir a ordem correta exigida para os filhos
     while (atual != NULL) {
         int v = buscaVertice(mst, atual->estacaoDestino);
         
-        // CORREÇÃO CRÍTICA: Só entra e imprime se o destino 'v' ainda não foi visitado
-        // na árvore de caminhamento a partir da raiz daquele componente!
         if (v != -1 && !visited[v]) {
-            // Imprime exatamente o arco pai -> filho da árvore geradora
             printf("%s, %s, %d\n", mst->vetorVertices[u].nomeEstacao, atual->estacaoDestino, atual->distancia);
-            
-            // Entra recursivamente no filho
             dfs_recursivo(mst, v, visited);
         }
         atual = atual->prox;
     }
 }
 
-// Constrói a MST via Kruskal e dispara o caminhamento DFS correto
+// Constrói a MST via Kruskal e dispara o caminhamento DFS
 void mstAndDFS(Grafo *g, char *origem) {
     int idxOrigem = buscaVertice(g, origem);
     if (idxOrigem == -1) {
@@ -293,7 +285,6 @@ void mstAndDFS(Grafo *g, char *origem) {
         return;
     }
 
-    // 1. Conta o número máximo de arestas para alocação do array
     int maxEdges = 0;
     for (int i = 0; i < g->numVertices; i++) {
         Aresta *atual = g->vetorVertices[i].inicio;
@@ -306,30 +297,42 @@ void mstAndDFS(Grafo *g, char *origem) {
     Edge *edges = malloc(maxEdges * sizeof(Edge));
     int edgeCount = 0;
 
-    // 2. Extrai as arestas do grafo direcionado original transformando em não-direcionado
+    // CONSOLIDAÇÃO BIDIRECIONAL: Garante apenas 1 aresta por par de estações com o menor peso
     for (int i = 0; i < g->numVertices; i++) {
         Aresta *atual = g->vetorVertices[i].inicio;
         while (atual != NULL) {
             int v = buscaVertice(g, atual->estacaoDestino);
-            if (i < v) { 
-                edges[edgeCount].u = i;
-                edges[edgeCount].v = v;
-                edges[edgeCount].peso = atual->distancia;
-                edgeCount++;
-            } else if (i > v) { 
-                edges[edgeCount].u = v;
-                edges[edgeCount].v = i;
-                edges[edgeCount].peso = atual->distancia;
-                edgeCount++;
+            if (v != -1) {
+                // Força u ser o menor e v o maior (Ordem Alfabética)
+                int u_node = (i < v) ? i : v;
+                int v_node = (i > v) ? i : v;
+
+                int found = 0;
+                for (int k = 0; k < edgeCount; k++) {
+                    if (edges[k].u == u_node && edges[k].v == v_node) {
+                        // Se já achou a mesma conexão, mantém apenas a de MENOR distância
+                        if (atual->distancia < edges[k].peso) {
+                            edges[k].peso = atual->distancia;
+                        }
+                        found = 1;
+                        break;
+                    }
+                }
+                
+                // Só adiciona se for uma conexão nova
+                if (!found) {
+                    edges[edgeCount].u = u_node;
+                    edges[edgeCount].v = v_node;
+                    edges[edgeCount].peso = atual->distancia;
+                    edgeCount++;
+                }
             }
             atual = atual->prox;
         }
     }
 
-    // 3. Ordena as arestas com base nas regras estritas de desempate do Kruskal
     qsort(edges, edgeCount, sizeof(Edge), cmpEdges);
 
-    // 4. Prepara o Union-Find e inicializa a estrutura da árvore (mst)
     int *parent = malloc(g->numVertices * sizeof(int));
     char **nomes = malloc(g->numVertices * sizeof(char *));
     for (int i = 0; i < g->numVertices; i++) {
@@ -340,31 +343,69 @@ void mstAndDFS(Grafo *g, char *origem) {
     Grafo *mst = criarGrafo(g->numVertices, nomes);
     free(nomes);
 
-    // 5. Algoritmo de Kruskal: Constrói a árvore de custo mínimo
     for (int i = 0; i < edgeCount; i++) {
         int u = edges[i].u;
         int v = edges[i].v;
         int x = findSet(parent, u);
         int y = findSet(parent, v);
 
-        // Se não forma ciclo, a aresta pertence à MST
         if (x != y) {
             unionSet(parent, x, y);
-            // Insere como via de mão dupla (não-direcionado) na nossa estrutura de árvore
             inserirAresta(mst, mst->vetorVertices[u].nomeEstacao, mst->vetorVertices[v].nomeEstacao, edges[i].peso, "MST");
             inserirAresta(mst, mst->vetorVertices[v].nomeEstacao, mst->vetorVertices[u].nomeEstacao, edges[i].peso, "MST");
         }
     }
 
-    // 6. Vetor de controle de visitados para o caminhamento da DFS
     int *visited = calloc(g->numVertices, sizeof(int));
-    
-    // Dispara a árvore de recursão a partir do vértice de origem informado
     dfs_recursivo(mst, idxOrigem, visited);
 
-    // 7. Limpeza rigorosa da memória RAM
     free(edges);
     free(parent);
     free(visited);
     liberarGrafo(mst);
+}
+
+// ========================================================
+// FUNCIONALIDADE 13: Busca de Ciclos Simples
+// ========================================================
+
+static void dfs_cycles(Grafo *g, int origin, int u, int *visited, int *count) {
+    Aresta *atual = g->vetorVertices[u].inicio;
+    
+    while (atual != NULL) {
+        int v = buscaVertice(g, atual->estacaoDestino);
+        
+        if (v != -1) {
+            if (v == origin) {
+                (*count)++; // Encontrou um ciclo de volta para a origem!
+            } else if (!visited[v]) {
+                visited[v] = 1;
+                dfs_cycles(g, origin, v, visited, count);
+                visited[v] = 0; // Backtracking para encontrar todos os ciclos
+            }
+        }
+        atual = atual->prox;
+    }
+}
+
+void buscarCiclos(Grafo *g, char *origem) {
+    int idxOrigem = buscaVertice(g, origem);
+    if (idxOrigem == -1) {
+        printf("Falha na execução da funcionalidade.\n");
+        return;
+    }
+
+    int *visited = calloc(g->numVertices, sizeof(int));
+    int count = 0;
+
+    visited[idxOrigem] = 1;
+    dfs_cycles(g, idxOrigem, idxOrigem, visited, &count);
+
+    if (count == 0) {
+        printf("Quantidade de ciclos: -1\n");
+    } else {
+        printf("Quantidade de ciclos: %d\n", count);
+    }
+    
+    free(visited);
 }

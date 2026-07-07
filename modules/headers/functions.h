@@ -56,5 +56,5 @@ void shortestPath(char *arquivoDados, char *arquivoIndex);
 void minimumSpanningTree(char *arquivoDados, char *arquivoIndex);
 
 // FUNCIONALIDADE [13]
-void countCyclesFromOrigin(char *arquivoEntrada, char *nomeEstacaoOrigem, char *valorOrigem);
+void countCyclesFromOrigin(char *arquivoDados, char *arquivoIndex);
 #endif
